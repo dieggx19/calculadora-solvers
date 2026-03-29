@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¿Cuánto dinero pierde tu empresa en procesos manuales? — Solvers</title>
+<meta name="description" content="Calcula gratis cuánto dinero y horas pierde tu empresa en procesos manuales. Descubre tu potencial de ahorro con automatización.">
+<meta property="og:title" content="Calculadora de costos ocultos — Solvers">
+<meta property="og:description" content="Descubre cuánto dinero pierde tu empresa en procesos manuales cada mes.">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  :root {
+    --green-50: #E1F5EE; --green-400: #1D9E75; --green-600: #0F6E56; --green-800: #085041;
+    --coral-50: #FAECE7; --coral-600: #993C1D; --coral-400: #D85A30;
+    --blue-600: #185FA5;
+    --bg: #FAFAF8; --bg-card: #FFFFFF; --bg-muted: #F3F2EE;
+    --text: #1a1a1a; --text-secondary: #5f5e5a; --text-muted: #888780;
+    --border: #E5E4E0; --border-hover: #D3D1C7;
+    --radius: 12px; --radius-sm: 8px;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .container {
+    max-width: 580px;
+    width: 100%;
+  }
+
+  .brand {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .brand-name {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--green-800);
+  }
+
+  .brand-tagline {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  /* Step indicator */
+  .steps { display: flex; gap: 6px; margin-bottom: 2rem; }
+  .step-dot {
+    height: 6px; border-radius: 3px;
+    background: var(--border);
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    flex: 0 0 10px;
+  }
+  .step-dot.active { flex: 0 0 32px; background: var(--green-400); }
+  .step-dot.done { flex: 0 0 10px; background: var(--green-400); }
+
+  h2 { font-size: 20px; font-weight: 600; line-height: 1.3; margin-bottom: 6px; }
+  .subtitle { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.5; }
+
+  /* Options grid */
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .options-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .option {
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .option:hover { border-color: var(--border-hover); background: var(--bg-muted); }
+  .option.selected { border: 2px solid var(--green-400); background: var(--green-50); }
+  .option-icon { font-size: 22px; margin-bottom: 4px; }
+  .option-label { font-size: 14px; font-weight: 450; }
+  .option.selected .option-label { font-weight: 550; color: var(--green-800); }
+  .option-meta { font-size: 12px; color: var(--text-muted); }
+
+  .option-row {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  /* Checkbox options */
+  .check-option {
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .check-option:hover { border-color: var(--border-hover); }
+  .check-option.selected { border: 2px solid var(--green-400); background: var(--green-50); }
+
+  .checkbox {
+    width: 22px; height: 22px; min-width: 22px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border-hover);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    margin-top: 1px;
+  }
+  .check-option.selected .checkbox {
+    background: var(--green-400); border-color: var(--green-400);
+  }
+
+  .check-label { font-size: 14px; font-weight: 450; }
+  .check-option.selected .check-label { font-weight: 550; color: var(--green-800); }
+  .check-desc { font-size: 13px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+
+  /* Sliders */
+  .slider-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+  }
+  .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .slider-label { font-size: 14px; font-weight: 500; }
+  .slider-value { font-size: 13px; color: var(--green-400); font-weight: 550; }
+  
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--green-400);
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--green-400);
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+
+  .slider-labels { display: flex; justify-content: space-between; margin-top: 6px; }
+  .slider-labels span { font-size: 11px; color: var(--text-muted); }
+
+  .preview-bar {
+    background: var(--green-50);
+    border-radius: var(--radius-sm);
+    padding: 14px 20px;
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .preview-bar-label { font-size: 14px; color: var(--green-800); }
+  .preview-bar-value { font-size: 16px; font-weight: 600; color: var(--green-800); }
+
+  /* Navigation */
+  .nav { display: flex; justify-content: space-between; margin-top: 24px; }
+  
+  .btn {
+    padding: 12px 28px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+    font-family: var(--font);
+  }
+  .btn-primary {
+    background: var(--green-400); color: white;
+  }
+  .btn-primary:hover { background: var(--green-600); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary:disabled:hover { background: var(--green-400); }
+  
+  .btn-secondary {
+    background: transparent; color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--bg-muted); }
+
+  /* Results page */
+  .results-badge {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 20px;
+    background: var(--coral-50);
+    color: var(--coral-600);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .results-hero {
+    text-align: center;
+    padding: 28px 24px;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, #085041 0%, #0F6E56 100%);
+    color: white;
+    margin: 20px 0;
+  }
+  .results-hero .big-number { font-size: 40px; font-weight: 700; letter-spacing: -1px; }
+  .results-hero .big-label { font-size: 15px; opacity: 0.85; margin-top: 4px; }
+
+  .metrics-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .metric-card {
+    background: var(--bg-muted);
+    border-radius: var(--radius-sm);
+    padding: 16px 12px;
+    text-align: center;
+  }
+  .metric-number { font-size: 22px; font-weight: 600; }
+  .metric-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  .breakdown { margin-bottom: 24px; }
+  .breakdown-title { font-size: 14px; font-weight: 550; margin-bottom: 12px; }
+  .breakdown-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0;
+  }
+  .breakdown-row + .breakdown-row { border-top: 1px solid var(--border); }
+  .breakdown-name { font-size: 14px; }
+  .breakdown-cost { font-size: 14px; font-weight: 550; color: var(--coral-400); }
+  .breakdown-hours { font-size: 12px; color: var(--text-muted); margin-left: 8px; }
+
+  .cta-box {
+    background: var(--green-50);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    text-align: center;
+  }
+  .cta-title { font-size: 16px; font-weight: 550; color: var(--green-800); margin-bottom: 8px; }
+  .cta-text { font-size: 14px; color: var(--green-600); line-height: 1.6; margin-bottom: 20px; }
+  
+  .btn-cta {
+    display: inline-block;
+    padding: 16px 44px;
+    border-radius: var(--radius-sm);
+    background: var(--green-400);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+  }
+  .btn-cta:hover { background: var(--green-600); }
+
+  .cta-fine { font-size: 12px; color: var(--green-600); margin-top: 10px; opacity: 0.7; }
+
+  /* Animations */
+  .fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
+  .fade-in-1 { animation-delay: 0.3s; }
+  .fade-in-2 { animation-delay: 0.6s; }
+  .fade-in-3 { animation-delay: 0.9s; }
+  .fade-in-4 { animation-delay: 1.2s; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .slide { transition: opacity 0.25s ease, transform 0.25s ease; }
+  .slide.out { opacity: 0; transform: translateY(8px); }
+
+  /* Mobile */
+  @media (max-width: 480px) {
+    .card { padding: 1.5rem 1.25rem; }
+    .options-grid { grid-template-columns: 1fr; }
+    .metrics-grid { grid-template-columns: 1fr; }
+    .results-hero .big-number { font-size: 32px; }
+    h2 { font-size: 18px; }
+    .preview-bar { flex-direction: column; gap: 4px; text-align: center; }
+  }
+
+  /* Link de Google Fonts */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="container">
+    <div class="brand">
+      <div class="brand-name">Solvers</div>
+      <div class="brand-tagline">Tu empresa opera. Nosotros la hacemos escalar.</div>
+    </div>
+    <div class="card">
+      <div id="app"></div>
+    </div>
+    <div style="text-align:center; margin-top:1.5rem;">
+      <span style="font-size:12px; color:var(--text-muted);">© 2026 Solvers · Consultoría en automatización e IA</span>
+    </div>
+  </div>
+</div>
+
+<script>
+const INDUSTRIES = [
+  { id:"logistics", label:"Logística y distribución", icon:"🚛" },
+  { id:"retail", label:"Retail y comercio", icon:"🏪" },
+  { id:"services", label:"Servicios profesionales", icon:"💼" },
+  { id:"health", label:"Salud y clínicas", icon:"🏥" },
+  { id:"realestate", label:"Inmobiliarias y constructoras", icon:"🏗️" },
+  { id:"other", label:"Otra industria", icon:"🏢" },
+];
+
+const SIZES = [
+  { id:"small", label:"10–30 empleados", employees:20, costHour:10 },
+  { id:"medium", label:"30–80 empleados", employees:55, costHour:12 },
+  { id:"large", label:"80–200 empleados", employees:140, costHour:14 },
+  { id:"xlarge", label:"200+ empleados", employees:250, costHour:15 },
+];
+
+const PROCESSES = [
+  { id:"orders", label:"Procesamiento de pedidos", desc:"Pedidos llegan por WhatsApp, email o teléfono y se pasan manualmente a un sistema", hoursWeek:12, industries:["logistics","retail","other"] },
+  { id:"invoicing", label:"Facturación y cobranza", desc:"Facturas se generan manualmente, seguimiento de pagos por correo o Excel", hoursWeek:8, industries:["logistics","retail","services","health","realestate","other"] },
+  { id:"reporting", label:"Reportes y cierre de mes", desc:"Consolidar datos de múltiples fuentes para generar informes", hoursWeek:10, industries:["logistics","retail","services","realestate","other"] },
+  { id:"crm", label:"Seguimiento de clientes / leads", desc:"Seguimientos manuales, sin CRM o con uno que nadie usa", hoursWeek:10, industries:["retail","services","realestate","other"] },
+  { id:"onboarding", label:"Onboarding de clientes o empleados", desc:"Proceso manual con correos, documentos y checklists en papel o Excel", hoursWeek:6, industries:["services","health","realestate","other"] },
+  { id:"inventory", label:"Control de inventario", desc:"Inventario en Excel, sin alertas automáticas ni conexión con ventas", hoursWeek:8, industries:["logistics","retail","other"] },
+  { id:"scheduling", label:"Agendamiento y coordinación", desc:"Agendar citas o despachos manualmente por teléfono o WhatsApp", hoursWeek:7, industries:["health","services","realestate","other"] },
+  { id:"support", label:"Atención al cliente / soporte", desc:"Consultas llegan por múltiples canales sin sistema centralizado", hoursWeek:10, industries:["retail","health","services","other"] },
+  { id:"approvals", label:"Aprobaciones y flujos internos", desc:"Aprobaciones de gastos, vacaciones o compras van por correo sin proceso formal", hoursWeek:5, industries:["logistics","services","realestate","other"] },
+  { id:"data_entry", label:"Copiar datos entre sistemas", desc:"Información se traslada manualmente de un software a otro", hoursWeek:8, industries:["logistics","retail","services","health","realestate","other"] },
+];
+
+// ── REPLACE THIS WITH YOUR REAL CALENDLY / CAL.COM LINK ──
+const BOOKING_URL = "https://calendly.com/TU-LINK-AQUI";
+
+let state = {
+  step: 0,
+  industry: null,
+  size: null,
+  selectedProcesses: [],
+  adjustments: {},
+  showResults: false,
+};
+
+const app = document.getElementById("app");
+
+function setState(updates) {
+  Object.assign(state, updates);
+  render();
+}
+
+function getCalc() {
+  const sizeData = SIZES.find(s => s.id === state.size);
+  const costHour = sizeData ? sizeData.costHour : 12;
+  const totalHoursWeek = state.selectedProcesses.reduce((sum, pid) => {
+    const proc = PROCESSES.find(p => p.id === pid);
+    const adj = state.adjustments[pid] ?? 1;
+    return sum + (proc ? proc.hoursWeek * adj : 0);
+  }, 0);
+  const monthlyCost = Math.round(totalHoursWeek * 4.3 * costHour);
+  const annualCost = monthlyCost * 12;
+  const automationSavings = Math.round(annualCost * 0.75);
+  const hoursMonth = Math.round(totalHoursWeek * 4.3);
+  return { costHour, totalHoursWeek, monthlyCost, annualCost, automationSavings, hoursMonth };
+}
+
+function fmt(n) { return n.toLocaleString("es-CL"); }
+
+function animateNumber(el, target, prefix, suffix) {
+  const duration = 1200;
+  const start = performance.now();
+  function tick(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = prefix + fmt(Math.round(eased * target)) + suffix;
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function renderSteps() {
+  return `<div class="steps">${[0,1,2,3].map(i => 
+    `<div class="step-dot ${i < state.step ? 'done' : ''} ${i === state.step ? 'active' : ''}"></div>`
+  ).join('')}</div>`;
+}
+
+function renderNav(canNext) {
+  const backBtn = state.step > 0 
+    ? `<button class="btn btn-secondary" onclick="goBack()">Atrás</button>` 
+    : `<div></div>`;
+  const nextLabel = state.step === 3 ? "Ver mi resultado" : "Siguiente";
+  return `<div class="nav">${backBtn}<button class="btn btn-primary" onclick="goNext()" ${canNext ? '' : 'disabled'}>${nextLabel}</button></div>`;
+}
+
+function render() {
+  if (state.showResults) return renderResults();
+
+  let html = renderSteps() + `<div class="slide" id="step-content">`;
+
+  if (state.step === 0) {
+    html += `<h2>¿En qué industria opera tu empresa?</h2>
+      <p class="subtitle">Esto nos permite estimar los procesos más comunes en tu sector.</p>
+      <div class="options-grid">
+        ${INDUSTRIES.map(ind => `
+          <div class="option ${state.industry === ind.id ? 'selected' : ''}" onclick="setState({industry:'${ind.id}'})">
+            <div class="option-icon">${ind.icon}</div>
+            <div class="option-label">${ind.label}</div>
+          </div>
+        `).join('')}
+      </div>`;
+    html += `</div>` + renderNav(!!state.industry);
+  }
+
+  else if (state.step === 1) {
+    html += `<h2>¿Cuántos empleados tiene tu empresa?</h2>
+      <p class="subtitle">Esto afecta el costo estimado por hora de trabajo manual.</p>
+      <div class="options-list">
+        ${SIZES.map(s => `
+          <div class="option ${state.size === s.id ? 'selected' : ''}" onclick="setState({size:'${s.id}'})">
+            <div class="option-row">
+              <span class="option-label">${s.label}</span>
+              <span class="option-meta">~$${s.costHour} USD/hora promedio</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>`;
+    html += `</div>` + renderNav(!!state.size);
+  }
+
+  else if (state.step === 2) {
+    const filtered = PROCESSES.filter(p => !state.industry || p.industries.includes(state.industry));
+    html += `<h2>¿Cuáles de estos procesos son manuales en tu empresa?</h2>
+      <p class="subtitle">Selecciona todos los que apliquen.</p>
+      <div class="options-list">
+        ${filtered.map(proc => {
+          const sel = state.selectedProcesses.includes(proc.id);
+          return `<div class="check-option ${sel ? 'selected' : ''}" onclick="toggleProcess('${proc.id}')">
+            <div class="checkbox">${sel ? '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}</div>
+            <div>
+              <div class="check-label">${proc.label}</div>
+              <div class="check-desc">${proc.desc}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    html += `</div>` + renderNav(state.selectedProcesses.length > 0);
+  }
+
+  else if (state.step === 3) {
+    const calc = getCalc();
+    html += `<h2>¿Qué tan intensos son estos procesos en tu empresa?</h2>
+      <p class="subtitle">Ajusta la intensidad según tu realidad. El promedio de la industria está al centro.</p>
+      <div class="options-list">
+        ${state.selectedProcesses.map(pid => {
+          const proc = PROCESSES.find(p => p.id === pid);
+          const adj = state.adjustments[pid] ?? 1;
+          const hrs = Math.round(proc.hoursWeek * adj);
+          return `<div class="slider-card">
+            <div class="slider-header">
+              <span class="slider-label">${proc.label}</span>
+              <span class="slider-value">~${hrs} hrs/semana</span>
+            </div>
+            <input type="range" min="0.3" max="2" step="0.1" value="${adj}" oninput="updateAdj('${pid}', this.value)">
+            <div class="slider-labels"><span>Menor</span><span>Promedio</span><span>Mayor</span></div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="preview-bar">
+        <span class="preview-bar-label">Estimación preliminar:</span>
+        <span class="preview-bar-value">${Math.round(calc.totalHoursWeek)} hrs/semana · $${fmt(calc.monthlyCost)}/mes</span>
+      </div>`;
+    html += `</div>` + renderNav(true);
+  }
+
+  app.innerHTML = html;
+}
+
+function renderResults() {
+  const calc = getCalc();
+  
+  let breakdownHTML = state.selectedProcesses.map((pid, i) => {
+    const proc = PROCESSES.find(p => p.id === pid);
+    const adj = state.adjustments[pid] ?? 1;
+    const hours = Math.round(proc.hoursWeek * adj * 4.3);
+    const cost = Math.round(hours * calc.costHour);
+    return `<div class="breakdown-row">
+      <span class="breakdown-name">${proc.label}</span>
+      <div><span class="breakdown-cost">$${fmt(cost)}/mes</span><span class="breakdown-hours">${hours}h/mes</span></div>
+    </div>`;
+  }).join('');
+
+  app.innerHTML = `
+    <div style="text-align:center; margin-bottom:8px;">
+      <span class="results-badge fade-in">Resultado de tu diagnóstico express</span>
+    </div>
+    <h2 style="text-align:center; margin-bottom:0; font-size:20px;" class="fade-in">Tu empresa pierde aproximadamente</h2>
+    
+    <div class="results-hero fade-in fade-in-1">
+      <div class="big-number" id="anim-annual">$0 USD</div>
+      <div class="big-label">al año en procesos manuales</div>
+    </div>
+
+    <div class="metrics-grid fade-in fade-in-2">
+      <div class="metric-card">
+        <div class="metric-number" style="color:var(--coral-400)" id="anim-hours">0</div>
+        <div class="metric-label">horas/mes perdidas</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-number" style="color:var(--green-400)" id="anim-monthly">$0</div>
+        <div class="metric-label">costo mensual</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-number" style="color:var(--blue-600)" id="anim-savings">$0</div>
+        <div class="metric-label">ahorro potencial/año</div>
+      </div>
+    </div>
+
+    <div class="breakdown fade-in fade-in-3">
+      <div class="breakdown-title">Procesos con mayor impacto</div>
+      ${breakdownHTML}
+    </div>
+
+    <div class="cta-box fade-in fade-in-4">
+      <div class="cta-title">El 75% de este costo es automatizable</div>
+      <div class="cta-text">Con un diagnóstico profesional, identificamos exactamente qué automatizar, en qué orden, y cuánto retorno genera cada mejora.</div>
+      <a href="${BOOKING_URL}" target="_blank" rel="noopener" class="btn-cta">Agendar diagnóstico gratuito de 30 min</a>
+      <div class="cta-fine">Sin compromiso. Te mostramos dónde están las oportunidades.</div>
+    </div>
+
+    <div style="display:flex; justify-content:center; margin-top:20px;">
+      <button class="btn btn-secondary" onclick="goBack()">Recalcular</button>
+    </div>
+  `;
+
+  setTimeout(() => {
+    const elAnnual = document.getElementById("anim-annual");
+    const elHours = document.getElementById("anim-hours");
+    const elMonthly = document.getElementById("anim-monthly");
+    const elSavings = document.getElementById("anim-savings");
+    if (elAnnual) animateNumber(elAnnual, calc.annualCost, "$", " USD");
+    if (elHours) animateNumber(elHours, calc.hoursMonth, "", "");
+    if (elMonthly) animateNumber(elMonthly, calc.monthlyCost, "$", "");
+    if (elSavings) animateNumber(elSavings, calc.automationSavings, "$", "");
+  }, 800);
+}
+
+function toggleProcess(id) {
+  const arr = state.selectedProcesses;
+  if (arr.includes(id)) {
+    setState({ selectedProcesses: arr.filter(p => p !== id) });
+  } else {
+    setState({ selectedProcesses: [...arr, id] });
+  }
+}
+
+function updateAdj(pid, val) {
+  const adj = { ...state.adjustments, [pid]: parseFloat(val) };
+  setState({ adjustments: adj });
+}
+
+function goNext() {
+  if (state.step === 3) {
+    setState({ showResults: true });
+  } else {
+    setState({ step: state.step + 1 });
+  }
+}
+
+function goBack() {
+  if (state.showResults) {
+    setState({ showResults: false });
+  } else if (state.step > 0) {
+    setState({ step: state.step - 1 });
+  }
+}
+
+render();
+</script>
+</body>
+</html>
