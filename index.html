@@ -336,6 +336,7 @@
 </div>
 
 <script>
+const N8N_WEBHOOK_URL = "https://proyecto-rep-n8n.lagxsc.easypanel.host/webhook/lead-capture";
 const INDUSTRIES = [
   { id:"logistics", label:"Logística y distribución", icon:"🚛" },
   { id:"retail", label:"Retail y comercio", icon:"🏪" },
@@ -375,6 +376,10 @@ let state = {
   selectedProcesses: [],
   adjustments: {},
   showResults: false,
+  nombre: '',
+  email: '',
+  telefono: '',
+  empresa: '',
 };
 
 const app = document.getElementById("app");
@@ -414,8 +419,36 @@ function animateNumber(el, target, prefix, suffix) {
   requestAnimationFrame(tick);
 }
 
+async function sendToN8N(agendoLlamada = false) {
+  const calc = getCalc();
+  const payload = {
+    nombre: state.nombre,
+    email: state.email,
+    telefono: state.telefono,
+    empresa: state.empresa,
+    industria: INDUSTRIES.find(i => i.id === state.industry)?.label || state.industry,
+    num_empleados: SIZES.find(s => s.id === state.size)?.employees || 0,
+    procesos_manuales: state.selectedProcesses.map(pid => PROCESSES.find(p => p.id === pid)?.label),
+    horas_perdidas_semana: calc.totalHoursWeek,
+    costo_mensual_estimado: calc.monthlyCost,
+    ahorro_anual_estimado: calc.automationSavings,
+    agendo_llamada: agendoLlamada,
+    fecha_captura: new Date().toISOString()
+  };
+
+  try {
+    await fetch(N8N_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (e) {
+    console.error("Error enviando a n8n:", e);
+  }
+}
+
 function renderSteps() {
-  return `<div class="steps">${[0,1,2,3].map(i => 
+  return `<div class="steps">${[0,1,2,3,4].map(i => 
     `<div class="step-dot ${i < state.step ? 'done' : ''} ${i === state.step ? 'active' : ''}"></div>`
   ).join('')}</div>`;
 }
@@ -424,7 +457,7 @@ function renderNav(canNext) {
   const backBtn = state.step > 0 
     ? `<button class="btn btn-secondary" onclick="goBack()">Atrás</button>` 
     : `<div></div>`;
-  const nextLabel = state.step === 3 ? "Ver mi resultado" : "Siguiente";
+  const nextLabel = state.step === 4 ? "Ver mi resultado" : "Siguiente";
   return `<div class="nav">${backBtn}<button class="btn btn-primary" onclick="goNext()" ${canNext ? '' : 'disabled'}>${nextLabel}</button></div>`;
 }
 
@@ -508,6 +541,18 @@ function render() {
     html += `</div>` + renderNav(true);
   }
 
+  else if (state.step === 4) {
+    html += `<h2>¡Casi listo! ¿A dónde te enviamos el reporte?</h2>
+      <p class="subtitle">Ingresa tus datos para ver el análisis detallado y recibir una copia.</p>
+      <div class="options-list">
+        <input type="text" placeholder="Nombre completo" class="option" style="cursor:text; width:100%" oninput="state.nombre = this.value" value="${state.nombre}">
+        <input type="email" placeholder="Email corporativo" class="option" style="cursor:text; width:100%" oninput="state.email = this.value" value="${state.email}">
+        <input type="text" placeholder="Empresa" class="option" style="cursor:text; width:100%" oninput="state.empresa = this.value" value="${state.empresa}">
+        <input type="tel" placeholder="Teléfono / WhatsApp" class="option" style="cursor:text; width:100%" oninput="state.telefono = this.value" value="${state.telefono}">
+      </div>`;
+    html += `</div>` + renderNav(state.nombre && state.email && state.empresa);
+  }
+
   app.innerHTML = html;
 }
 
@@ -559,7 +604,7 @@ function renderResults() {
     <div class="cta-box fade-in fade-in-4">
       <div class="cta-title">El 75% de este costo es automatizable</div>
       <div class="cta-text">Con un diagnóstico profesional, identificamos exactamente qué automatizar, en qué orden, y cuánto retorno genera cada mejora.</div>
-      <a href="${BOOKING_URL}" target="_blank" rel="noopener" class="btn-cta">Agendar diagnóstico gratuito de 30 min</a>
+      <a href="${BOOKING_URL}" target="_blank" rel="noopener" class="btn-cta" onclick="sendToN8N(true)">Agendar diagnóstico gratuito de 30 min</a>
       <div class="cta-fine">Sin compromiso. Te mostramos dónde están las oportunidades.</div>
     </div>
 
@@ -595,7 +640,8 @@ function updateAdj(pid, val) {
 }
 
 function goNext() {
-  if (state.step === 3) {
+  if (state.step === 4) {
+    sendToN8N(false);
     setState({ showResults: true });
   } else {
     setState({ step: state.step + 1 });
